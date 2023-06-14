@@ -1,4 +1,3 @@
-
 import java.math.BigInteger
 import java.util.*
 
@@ -10,6 +9,12 @@ class generateRSAKeys(private val bitLength: Int) {
     // Вычисляем их произведение n
     private var n = p.multiply(q)
 
+    init {
+        // Если длина n не соответствует заданной длине битового ключа,
+        // перегенерируем значения p, q, n, phi(n), e и d до тех пор, пока n не станет нужной длины
+        regenerateNIfNecessary()
+    }
+
     // Вычисляем функцию Эйлера от n (phi(n))
     private var phiN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE))
 
@@ -19,20 +24,13 @@ class generateRSAKeys(private val bitLength: Int) {
     // Вычисляем число d, обратное e по модулю phi(n)
     private var d = e.modInverse(phiN)
 
-    init {
-        // Если длина n не соответствует заданной длине битового ключа,
-        // перегенерируем значения p, q, n, phi(n), e и d до тех пор, пока n не станет нужной длины
-        regenerateNIfNecessary()
-    }
+
 
     private fun regenerateNIfNecessary() {
         while ((n.bitLength() != bitLength) || (p == q)) {
             p = BigInteger.probablePrime(bitLength / 2, Random())
             q = BigInteger.probablePrime(bitLength / 2, Random())
             n = p.multiply(q)
-            phiN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE))
-            e = generateRandomE()
-            d = e.modInverse(phiN)
         }
     }
 
@@ -108,7 +106,7 @@ fun pollardsRho(n: BigInteger): BigInteger {
 
     val g = { num: BigInteger -> num.multiply(num).add(BigInteger.ONE).mod(n) }
 
-    while (d == BigInteger.ONE) {
+    while (d == BigInteger.ONE )  {
         x = g(x)
         y = g(g(y))
         d = x.subtract(y).abs().gcd(n)
@@ -119,6 +117,7 @@ fun pollardsRho(n: BigInteger): BigInteger {
 
 fun main() {
     // Инициализируем класс RSA и передаем в него длину ключа
+    val begin = System.nanoTime()
     val rsa = generateRSAKeys(64)
 
     // Получаем открытый и закрытый ключи
@@ -150,5 +149,7 @@ fun main() {
     } else {
         println("Failed to crack RSA keys.")
     }
+    val end = System.nanoTime()
+    println("Time: ${(end - begin) / 1000000} ms")
 
 }
